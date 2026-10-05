@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "framework": null,
+  "crons": [
+    {
+      "path": "/api/public/cron/payouts",
+      "schedule": "5 22 * * *"
+    }
+  ]
+}
