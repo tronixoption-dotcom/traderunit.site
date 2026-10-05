@@ -9,55 +9,75 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
-import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
-import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/trade'
-import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedTradeIndexRouteImport } from './routes/_authenticated/trade.index'
+import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedTradeRouteImport } from './routes/_authenticated/trade'
+import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedTradeSpinRouteImport } from './routes/_authenticated/trade.spin'
-import { Route as AuthenticatedTradeRedpacketRouteImport } from './routes/_authenticated/trade.redpacket'
-import { Route as AuthenticatedTradeMineRouteImport } from './routes/_authenticated/trade.mine'
-import { Route as AuthenticatedTradeMarketRouteImport } from './routes/_authenticated/trade.market'
-import { Route as AuthenticatedMySupportRouteImport } from './routes/_authenticated/my.support'
-import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
-import { Route as AuthenticatedAdminTreasuryRouteImport } from './routes/_authenticated/admin.treasury'
-import { Route as AuthenticatedAdminTeamsRouteImport } from './routes/_authenticated/admin.teams'
-import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
-import { Route as AuthenticatedAdminSpinsRouteImport } from './routes/_authenticated/admin.spins'
-import { Route as AuthenticatedAdminRedpacketsRouteImport } from './routes/_authenticated/admin.redpackets'
-import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin.packages'
-import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin.kyc'
-import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
-import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminAccountsRouteImport } from './routes/_authenticated/admin.accounts'
-import { Route as ApiPublicMpesaCallbackRouteImport } from './routes/api/public/mpesa.callback'
+import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
+import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authenticated/admin.deposits'
+import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin.kyc'
+import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin.packages'
+import { Route as AuthenticatedAdminRedpacketsRouteImport } from './routes/_authenticated/admin.redpackets'
+import { Route as AuthenticatedAdminSpinsRouteImport } from './routes/_authenticated/admin.spins'
+import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
+import { Route as AuthenticatedAdminTeamsRouteImport } from './routes/_authenticated/admin.teams'
+import { Route as AuthenticatedAdminTreasuryRouteImport } from './routes/_authenticated/admin.treasury'
+import { Route as AuthenticatedAdminWithdrawalsRouteImport } from './routes/_authenticated/admin.withdrawals'
+import { Route as AuthenticatedMySupportRouteImport } from './routes/_authenticated/my.support'
+import { Route as AuthenticatedTradeIndexRouteImport } from './routes/_authenticated/trade.index'
+import { Route as AuthenticatedTradeMarketRouteImport } from './routes/_authenticated/trade.market'
+import { Route as AuthenticatedTradeMineRouteImport } from './routes/_authenticated/trade.mine'
+import { Route as AuthenticatedTradeRedpacketRouteImport } from './routes/_authenticated/trade.redpacket'
+import { Route as AuthenticatedTradeSpinRouteImport } from './routes/_authenticated/trade.spin'
 import { Route as ApiPublicCronPayoutsRouteImport } from './routes/api/public/cron.payouts'
+import { Route as ApiPublicMpesaCallbackRouteImport } from './routes/api/public/mpesa.callback'
 import { Route as ApiPublicMpesaPayoutCallbackRouteImport } from './routes/api/public/mpesa/payout.callback'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMyRoute = AuthenticatedMyRouteImport.update({
+  id: '/my',
+  path: '/my',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTradeRoute = AuthenticatedTradeRouteImport.update({
+  id: '/trade',
+  path: '/trade',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTransactionsRoute =
@@ -66,117 +86,20 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTradeRoute = AuthenticatedTradeRouteImport.update({
-  id: '/trade',
-  path: '/trade',
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMyRoute = AuthenticatedMyRouteImport.update({
-  id: '/my',
-  path: '/my',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTradeIndexRoute = AuthenticatedTradeIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedTradeRoute,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTradeSpinRoute = AuthenticatedTradeSpinRouteImport.update({
-  id: '/spin',
-  path: '/spin',
-  getParentRoute: () => AuthenticatedTradeRoute,
-} as any)
-const AuthenticatedTradeRedpacketRoute =
-  AuthenticatedTradeRedpacketRouteImport.update({
-    id: '/redpacket',
-    path: '/redpacket',
-    getParentRoute: () => AuthenticatedTradeRoute,
-  } as any)
-const AuthenticatedTradeMineRoute = AuthenticatedTradeMineRouteImport.update({
-  id: '/mine',
-  path: '/mine',
-  getParentRoute: () => AuthenticatedTradeRoute,
-} as any)
-const AuthenticatedTradeMarketRoute =
-  AuthenticatedTradeMarketRouteImport.update({
-    id: '/market',
-    path: '/market',
-    getParentRoute: () => AuthenticatedTradeRoute,
-  } as any)
-const AuthenticatedMySupportRoute = AuthenticatedMySupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => AuthenticatedMyRoute,
-} as any)
-const AuthenticatedAdminWithdrawalsRoute =
-  AuthenticatedAdminWithdrawalsRouteImport.update({
-    id: '/admin/withdrawals',
-    path: '/admin/withdrawals',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminTreasuryRoute =
-  AuthenticatedAdminTreasuryRouteImport.update({
-    id: '/admin/treasury',
-    path: '/admin/treasury',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminTeamsRoute = AuthenticatedAdminTeamsRouteImport.update({
-  id: '/admin/teams',
-  path: '/admin/teams',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminSupportRoute =
-  AuthenticatedAdminSupportRouteImport.update({
-    id: '/admin/support',
-    path: '/admin/support',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminSpinsRoute = AuthenticatedAdminSpinsRouteImport.update({
-  id: '/admin/spins',
-  path: '/admin/spins',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminRedpacketsRoute =
-  AuthenticatedAdminRedpacketsRouteImport.update({
-    id: '/admin/redpackets',
-    path: '/admin/redpackets',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminPackagesRoute =
-  AuthenticatedAdminPackagesRouteImport.update({
-    id: '/admin/packages',
-    path: '/admin/packages',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminKycRoute = AuthenticatedAdminKycRouteImport.update({
-  id: '/admin/kyc',
-  path: '/admin/kyc',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminDepositsRoute =
-  AuthenticatedAdminDepositsRouteImport.update({
-    id: '/admin/deposits',
-    path: '/admin/deposits',
+const AuthenticatedAdminAccountsRoute =
+  AuthenticatedAdminAccountsRouteImport.update({
+    id: '/admin/accounts',
+    path: '/admin/accounts',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminClientsRoute =
@@ -185,20 +108,97 @@ const AuthenticatedAdminClientsRoute =
     path: '/admin/clients',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminAccountsRoute =
-  AuthenticatedAdminAccountsRouteImport.update({
-    id: '/admin/accounts',
-    path: '/admin/accounts',
+const AuthenticatedAdminDepositsRoute =
+  AuthenticatedAdminDepositsRouteImport.update({
+    id: '/admin/deposits',
+    path: '/admin/deposits',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicMpesaCallbackRoute = ApiPublicMpesaCallbackRouteImport.update({
-  id: '/api/public/mpesa/callback',
-  path: '/api/public/mpesa/callback',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminKycRoute = AuthenticatedAdminKycRouteImport.update({
+  id: '/admin/kyc',
+  path: '/admin/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminPackagesRoute =
+  AuthenticatedAdminPackagesRouteImport.update({
+    id: '/admin/packages',
+    path: '/admin/packages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRedpacketsRoute =
+  AuthenticatedAdminRedpacketsRouteImport.update({
+    id: '/admin/redpackets',
+    path: '/admin/redpackets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSpinsRoute = AuthenticatedAdminSpinsRouteImport.update({
+  id: '/admin/spins',
+  path: '/admin/spins',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminSupportRoute =
+  AuthenticatedAdminSupportRouteImport.update({
+    id: '/admin/support',
+    path: '/admin/support',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminTeamsRoute = AuthenticatedAdminTeamsRouteImport.update({
+  id: '/admin/teams',
+  path: '/admin/teams',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminTreasuryRoute =
+  AuthenticatedAdminTreasuryRouteImport.update({
+    id: '/admin/treasury',
+    path: '/admin/treasury',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminWithdrawalsRoute =
+  AuthenticatedAdminWithdrawalsRouteImport.update({
+    id: '/admin/withdrawals',
+    path: '/admin/withdrawals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMySupportRoute = AuthenticatedMySupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedMyRoute,
+} as any)
+const AuthenticatedTradeIndexRoute = AuthenticatedTradeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedTradeRoute,
+} as any)
+const AuthenticatedTradeMarketRoute =
+  AuthenticatedTradeMarketRouteImport.update({
+    id: '/market',
+    path: '/market',
+    getParentRoute: () => AuthenticatedTradeRoute,
+  } as any)
+const AuthenticatedTradeMineRoute = AuthenticatedTradeMineRouteImport.update({
+  id: '/mine',
+  path: '/mine',
+  getParentRoute: () => AuthenticatedTradeRoute,
+} as any)
+const AuthenticatedTradeRedpacketRoute =
+  AuthenticatedTradeRedpacketRouteImport.update({
+    id: '/redpacket',
+    path: '/redpacket',
+    getParentRoute: () => AuthenticatedTradeRoute,
+  } as any)
+const AuthenticatedTradeSpinRoute = AuthenticatedTradeSpinRouteImport.update({
+  id: '/spin',
+  path: '/spin',
+  getParentRoute: () => AuthenticatedTradeRoute,
 } as any)
 const ApiPublicCronPayoutsRoute = ApiPublicCronPayoutsRouteImport.update({
   id: '/api/public/cron/payouts',
   path: '/api/public/cron/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMpesaCallbackRoute = ApiPublicMpesaCallbackRouteImport.update({
+  id: '/api/public/mpesa/callback',
+  path: '/api/public/mpesa/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicMpesaPayoutCallbackRoute =
@@ -415,11 +415,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -429,46 +429,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/transactions': {
-      id: '/_authenticated/transactions'
-      path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/trade': {
-      id: '/_authenticated/trade'
-      path: '/trade'
-      fullPath: '/trade'
-      preLoaderRoute: typeof AuthenticatedTradeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/team': {
-      id: '/_authenticated/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof AuthenticatedTeamRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my': {
@@ -478,130 +450,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/home': {
-      id: '/_authenticated/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AuthenticatedHomeRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/trade/': {
-      id: '/_authenticated/trade/'
-      path: '/'
-      fullPath: '/trade/'
-      preLoaderRoute: typeof AuthenticatedTradeIndexRouteImport
-      parentRoute: typeof AuthenticatedTradeRoute
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trade': {
+      id: '/_authenticated/trade'
+      path: '/trade'
+      fullPath: '/trade'
+      preLoaderRoute: typeof AuthenticatedTradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/transactions': {
+      id: '/_authenticated/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/trade/spin': {
-      id: '/_authenticated/trade/spin'
-      path: '/spin'
-      fullPath: '/trade/spin'
-      preLoaderRoute: typeof AuthenticatedTradeSpinRouteImport
-      parentRoute: typeof AuthenticatedTradeRoute
-    }
-    '/_authenticated/trade/redpacket': {
-      id: '/_authenticated/trade/redpacket'
-      path: '/redpacket'
-      fullPath: '/trade/redpacket'
-      preLoaderRoute: typeof AuthenticatedTradeRedpacketRouteImport
-      parentRoute: typeof AuthenticatedTradeRoute
-    }
-    '/_authenticated/trade/mine': {
-      id: '/_authenticated/trade/mine'
-      path: '/mine'
-      fullPath: '/trade/mine'
-      preLoaderRoute: typeof AuthenticatedTradeMineRouteImport
-      parentRoute: typeof AuthenticatedTradeRoute
-    }
-    '/_authenticated/trade/market': {
-      id: '/_authenticated/trade/market'
-      path: '/market'
-      fullPath: '/trade/market'
-      preLoaderRoute: typeof AuthenticatedTradeMarketRouteImport
-      parentRoute: typeof AuthenticatedTradeRoute
-    }
-    '/_authenticated/my/support': {
-      id: '/_authenticated/my/support'
-      path: '/support'
-      fullPath: '/my/support'
-      preLoaderRoute: typeof AuthenticatedMySupportRouteImport
-      parentRoute: typeof AuthenticatedMyRoute
-    }
-    '/_authenticated/admin/withdrawals': {
-      id: '/_authenticated/admin/withdrawals'
-      path: '/admin/withdrawals'
-      fullPath: '/admin/withdrawals'
-      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/treasury': {
-      id: '/_authenticated/admin/treasury'
-      path: '/admin/treasury'
-      fullPath: '/admin/treasury'
-      preLoaderRoute: typeof AuthenticatedAdminTreasuryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/teams': {
-      id: '/_authenticated/admin/teams'
-      path: '/admin/teams'
-      fullPath: '/admin/teams'
-      preLoaderRoute: typeof AuthenticatedAdminTeamsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/support': {
-      id: '/_authenticated/admin/support'
-      path: '/admin/support'
-      fullPath: '/admin/support'
-      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/spins': {
-      id: '/_authenticated/admin/spins'
-      path: '/admin/spins'
-      fullPath: '/admin/spins'
-      preLoaderRoute: typeof AuthenticatedAdminSpinsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/redpackets': {
-      id: '/_authenticated/admin/redpackets'
-      path: '/admin/redpackets'
-      fullPath: '/admin/redpackets'
-      preLoaderRoute: typeof AuthenticatedAdminRedpacketsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/packages': {
-      id: '/_authenticated/admin/packages'
-      path: '/admin/packages'
-      fullPath: '/admin/packages'
-      preLoaderRoute: typeof AuthenticatedAdminPackagesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/kyc': {
-      id: '/_authenticated/admin/kyc'
-      path: '/admin/kyc'
-      fullPath: '/admin/kyc'
-      preLoaderRoute: typeof AuthenticatedAdminKycRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/deposits': {
-      id: '/_authenticated/admin/deposits'
-      path: '/admin/deposits'
-      fullPath: '/admin/deposits'
-      preLoaderRoute: typeof AuthenticatedAdminDepositsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/clients': {
-      id: '/_authenticated/admin/clients'
-      path: '/admin/clients'
-      fullPath: '/admin/clients'
-      preLoaderRoute: typeof AuthenticatedAdminClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/accounts': {
@@ -611,18 +499,130 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAccountsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/mpesa/callback': {
-      id: '/api/public/mpesa/callback'
-      path: '/api/public/mpesa/callback'
-      fullPath: '/api/public/mpesa/callback'
-      preLoaderRoute: typeof ApiPublicMpesaCallbackRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/admin/clients': {
+      id: '/_authenticated/admin/clients'
+      path: '/admin/clients'
+      fullPath: '/admin/clients'
+      preLoaderRoute: typeof AuthenticatedAdminClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/deposits': {
+      id: '/_authenticated/admin/deposits'
+      path: '/admin/deposits'
+      fullPath: '/admin/deposits'
+      preLoaderRoute: typeof AuthenticatedAdminDepositsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/kyc': {
+      id: '/_authenticated/admin/kyc'
+      path: '/admin/kyc'
+      fullPath: '/admin/kyc'
+      preLoaderRoute: typeof AuthenticatedAdminKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/packages': {
+      id: '/_authenticated/admin/packages'
+      path: '/admin/packages'
+      fullPath: '/admin/packages'
+      preLoaderRoute: typeof AuthenticatedAdminPackagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/redpackets': {
+      id: '/_authenticated/admin/redpackets'
+      path: '/admin/redpackets'
+      fullPath: '/admin/redpackets'
+      preLoaderRoute: typeof AuthenticatedAdminRedpacketsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/spins': {
+      id: '/_authenticated/admin/spins'
+      path: '/admin/spins'
+      fullPath: '/admin/spins'
+      preLoaderRoute: typeof AuthenticatedAdminSpinsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/support': {
+      id: '/_authenticated/admin/support'
+      path: '/admin/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AuthenticatedAdminSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/teams': {
+      id: '/_authenticated/admin/teams'
+      path: '/admin/teams'
+      fullPath: '/admin/teams'
+      preLoaderRoute: typeof AuthenticatedAdminTeamsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/treasury': {
+      id: '/_authenticated/admin/treasury'
+      path: '/admin/treasury'
+      fullPath: '/admin/treasury'
+      preLoaderRoute: typeof AuthenticatedAdminTreasuryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/withdrawals': {
+      id: '/_authenticated/admin/withdrawals'
+      path: '/admin/withdrawals'
+      fullPath: '/admin/withdrawals'
+      preLoaderRoute: typeof AuthenticatedAdminWithdrawalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my/support': {
+      id: '/_authenticated/my/support'
+      path: '/support'
+      fullPath: '/my/support'
+      preLoaderRoute: typeof AuthenticatedMySupportRouteImport
+      parentRoute: typeof AuthenticatedMyRoute
+    }
+    '/_authenticated/trade/': {
+      id: '/_authenticated/trade/'
+      path: '/'
+      fullPath: '/trade/'
+      preLoaderRoute: typeof AuthenticatedTradeIndexRouteImport
+      parentRoute: typeof AuthenticatedTradeRoute
+    }
+    '/_authenticated/trade/market': {
+      id: '/_authenticated/trade/market'
+      path: '/market'
+      fullPath: '/trade/market'
+      preLoaderRoute: typeof AuthenticatedTradeMarketRouteImport
+      parentRoute: typeof AuthenticatedTradeRoute
+    }
+    '/_authenticated/trade/mine': {
+      id: '/_authenticated/trade/mine'
+      path: '/mine'
+      fullPath: '/trade/mine'
+      preLoaderRoute: typeof AuthenticatedTradeMineRouteImport
+      parentRoute: typeof AuthenticatedTradeRoute
+    }
+    '/_authenticated/trade/redpacket': {
+      id: '/_authenticated/trade/redpacket'
+      path: '/redpacket'
+      fullPath: '/trade/redpacket'
+      preLoaderRoute: typeof AuthenticatedTradeRedpacketRouteImport
+      parentRoute: typeof AuthenticatedTradeRoute
+    }
+    '/_authenticated/trade/spin': {
+      id: '/_authenticated/trade/spin'
+      path: '/spin'
+      fullPath: '/trade/spin'
+      preLoaderRoute: typeof AuthenticatedTradeSpinRouteImport
+      parentRoute: typeof AuthenticatedTradeRoute
     }
     '/api/public/cron/payouts': {
       id: '/api/public/cron/payouts'
       path: '/api/public/cron/payouts'
       fullPath: '/api/public/cron/payouts'
       preLoaderRoute: typeof ApiPublicCronPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mpesa/callback': {
+      id: '/api/public/mpesa/callback'
+      path: '/api/public/mpesa/callback'
+      fullPath: '/api/public/mpesa/callback'
+      preLoaderRoute: typeof ApiPublicMpesaCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/mpesa/payout/callback': {
