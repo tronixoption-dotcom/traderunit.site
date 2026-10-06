@@ -1095,7 +1095,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
       wallet: wallet.data,
       kyc: kyc.data ?? null,
       kycApproved: kyc.data?.status === "approved",
-      isAdmin: (roles.data ?? []).some((r) => r.role === "admin"),
+      isAdmin: (roles.data ?? []).some((r) => r.role === "admin" || r.role === "super_admin"),
     };
   });
 
