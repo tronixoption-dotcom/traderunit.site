@@ -341,21 +341,42 @@ export type Database = {
       };
       treasury_settings: {
         Row: {
+          crypto_deposits_enabled: boolean;
+          deposit_fee_rate: number;
           id: number;
+          maintenance_mode: boolean;
+          min_deposit: number;
+          min_withdrawal: number;
+          platform_name: string;
           payouts_frozen: boolean;
           updated_at: string;
+          withdrawal_fee_rate: number;
           withdrawals_frozen: boolean;
         };
         Insert: {
+          crypto_deposits_enabled?: boolean;
+          deposit_fee_rate?: number;
           id?: number;
+          maintenance_mode?: boolean;
+          min_deposit?: number;
+          min_withdrawal?: number;
+          platform_name?: string;
           payouts_frozen?: boolean;
           updated_at?: string;
+          withdrawal_fee_rate?: number;
           withdrawals_frozen?: boolean;
         };
         Update: {
+          crypto_deposits_enabled?: boolean;
+          deposit_fee_rate?: number;
           id?: number;
+          maintenance_mode?: boolean;
+          min_deposit?: number;
+          min_withdrawal?: number;
+          platform_name?: string;
           payouts_frozen?: boolean;
           updated_at?: string;
+          withdrawal_fee_rate?: number;
           withdrawals_frozen?: boolean;
         };
         Relationships: [];
@@ -531,7 +552,7 @@ export type Database = {
       };
     };
     Enums: {
-      app_role: "admin" | "client";
+      app_role: "admin" | "client" | "super_admin";
       package_tier: "bronze" | "silver" | "gold" | "diamond" | "platinum";
       pkg_status: "active" | "completed" | "cancelled";
       txn_kind:
@@ -667,7 +688,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "client"],
+      app_role: ["admin", "client", "super_admin"],
       package_tier: ["bronze", "silver", "gold", "diamond", "platinum"],
       pkg_status: ["active", "completed", "cancelled"],
       txn_kind: [

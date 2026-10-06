@@ -8,10 +8,10 @@ import { AdminShell } from "@/components/layout/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { adminListKycVerifications, adminReviewKycVerification } from "@/lib/admin.functions";
-import { requireAdminRoute } from "@/lib/admin-route";
+import { requireSuperAdminRoute } from "@/lib/admin-route";
 
 export const Route = createFileRoute("/_authenticated/admin/kyc")({
-  beforeLoad: requireAdminRoute,
+  beforeLoad: requireSuperAdminRoute,
   component: AdminKyc,
 });
 

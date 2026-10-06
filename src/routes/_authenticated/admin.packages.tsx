@@ -27,6 +27,7 @@ import {
   adminSetCopyTradeResultOverride,
   adminUploadCopyTradeAnalystAvatar,
   adminUpsertCopyTradeAnalyst,
+  adminGetAccess,
 } from "@/lib/admin.functions";
 import { requireAdminRoute } from "@/lib/admin-route";
 
@@ -80,7 +81,9 @@ function CopyTradingAdminPage() {
   const uploadAvatarFn = useServerFn(adminUploadCopyTradeAnalystAvatar);
   const deleteAnalystFn = useServerFn(adminDeleteCopyTradeAnalyst);
   const setTradeOverrideFn = useServerFn(adminSetCopyTradeResultOverride);
+  const accessFn = useServerFn(adminGetAccess);
   const { data } = useQuery({ queryKey: ["admin-copy-trading"], queryFn: () => copyTradingFn() });
+  const { data: access } = useQuery({ queryKey: ["admin-access"], queryFn: () => accessFn() });
   const [analystForm, setAnalystForm] = useState<any>(emptyAnalyst);
   const [analystAvatarFile, setAnalystAvatarFile] = useState<File | null>(null);
   const [signalMinimums, setSignalMinimums] = useState<Record<CopyTradeType, number>>({
@@ -448,13 +451,15 @@ function CopyTradingAdminPage() {
               {new Date(trade.closes_at).toLocaleString()}
             </div>
             <StatusPill status={trade.status} />
-            <TradeOverrideControls
-              trade={trade}
-              disabled={setTradeOverride.isPending}
-              onChange={(result_override) =>
-                setTradeOverride.mutate({ trade_id: trade.id, result_override })
-              }
-            />
+            {access?.role === "super_admin" ? (
+              <TradeOverrideControls
+                trade={trade}
+                disabled={setTradeOverride.isPending}
+                onChange={(result_override) =>
+                  setTradeOverride.mutate({ trade_id: trade.id, result_override })
+                }
+              />
+            ) : <span className="text-xs text-muted-foreground">View only</span>}
           </div>
         ))}
       </section>

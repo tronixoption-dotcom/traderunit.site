@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminDepositsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin.kyc'
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin.packages'
 import { Route as AuthenticatedAdminRedpacketsRouteImport } from './routes/_authenticated/admin.redpackets'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminSpinsRouteImport } from './routes/_authenticated/admin.spins'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedAdminTeamsRouteImport } from './routes/_authenticated/admin.teams'
@@ -131,6 +132,12 @@ const AuthenticatedAdminRedpacketsRoute =
     path: '/admin/redpackets',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/admin/settings',
+    path: '/admin/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminSpinsRoute = AuthenticatedAdminSpinsRouteImport.update({
   id: '/admin/spins',
   path: '/admin/spins',
@@ -224,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/redpackets': typeof AuthenticatedAdminRedpacketsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/spins': typeof AuthenticatedAdminSpinsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/teams': typeof AuthenticatedAdminTeamsRoute
@@ -255,6 +263,7 @@ export interface FileRoutesByTo {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/redpackets': typeof AuthenticatedAdminRedpacketsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/spins': typeof AuthenticatedAdminSpinsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/teams': typeof AuthenticatedAdminTeamsRoute
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/_authenticated/admin/redpackets': typeof AuthenticatedAdminRedpacketsRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/spins': typeof AuthenticatedAdminSpinsRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/admin/teams': typeof AuthenticatedAdminTeamsRoute
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/packages'
     | '/admin/redpackets'
+    | '/admin/settings'
     | '/admin/spins'
     | '/admin/support'
     | '/admin/teams'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/packages'
     | '/admin/redpackets'
+    | '/admin/settings'
     | '/admin/spins'
     | '/admin/support'
     | '/admin/teams'
@@ -387,6 +399,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/packages'
     | '/_authenticated/admin/redpackets'
+    | '/_authenticated/admin/settings'
     | '/_authenticated/admin/spins'
     | '/_authenticated/admin/support'
     | '/_authenticated/admin/teams'
@@ -532,6 +545,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/redpackets'
       fullPath: '/admin/redpackets'
       preLoaderRoute: typeof AuthenticatedAdminRedpacketsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/spins': {
@@ -680,6 +700,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
   AuthenticatedAdminRedpacketsRoute: typeof AuthenticatedAdminRedpacketsRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminSpinsRoute: typeof AuthenticatedAdminSpinsRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
   AuthenticatedAdminTeamsRoute: typeof AuthenticatedAdminTeamsRoute
@@ -702,6 +723,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
   AuthenticatedAdminPackagesRoute: AuthenticatedAdminPackagesRoute,
   AuthenticatedAdminRedpacketsRoute: AuthenticatedAdminRedpacketsRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminSpinsRoute: AuthenticatedAdminSpinsRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
   AuthenticatedAdminTeamsRoute: AuthenticatedAdminTeamsRoute,

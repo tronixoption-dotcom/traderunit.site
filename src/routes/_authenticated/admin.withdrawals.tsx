@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListWithdrawals, adminUpdateWithdrawal } from "@/lib/admin.functions";
+import { adminListWithdrawals, adminUpdateWithdrawal, adminGetAccess } from "@/lib/admin.functions";
 import { AdminShell } from "@/components/layout/admin-shell";
 import { toast } from "sonner";
 import { requireAdminRoute } from "@/lib/admin-route";
@@ -16,8 +16,10 @@ const fmt = (n: any) => `KES ${Number(n).toLocaleString()}`;
 function Page() {
   const listFn = useServerFn(adminListWithdrawals);
   const updFn = useServerFn(adminUpdateWithdrawal);
+  const accessFn = useServerFn(adminGetAccess);
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["admin-withdrawals"], queryFn: () => listFn() });
+  const { data: access } = useQuery({ queryKey: ["admin-access"], queryFn: () => accessFn() });
   const upd = useMutation({
     mutationFn: (args: { id: string; status: "approved" | "rejected" | "paid" }) =>
       updFn({ data: args }),
@@ -65,7 +67,8 @@ function Page() {
               </span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {d.status !== "paid" && d.status !== "rejected" && (
+              {access?.role !== "super_admin" && <span className="text-xs text-muted-foreground">View only</span>}
+              {access?.role === "super_admin" && d.status !== "paid" && d.status !== "rejected" && (
                 <>
                   <button
                     onClick={() => upd.mutate({ id: d.id, status: "approved" })}

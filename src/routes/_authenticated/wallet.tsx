@@ -50,7 +50,11 @@ function WalletPage() {
   const [pendingActivity, setPendingActivity] = useState<any[]>([]);
   const phone = prof?.profile?.phone ?? "";
   const depositAmount = Number(depAmt);
-  const depositPromptAmount = depositAmount > 0 ? getDepositPromptAmount(depositAmount) : 0;
+  const depositFeeRate = Number(data?.settings?.deposit_fee_rate ?? DEPOSIT_SURCHARGE_RATE);
+  const withdrawalFeeRate = Number(data?.settings?.withdrawal_fee_rate ?? WITHDRAWAL_FEE_RATE);
+  const minDeposit = Number(data?.settings?.min_deposit ?? 10);
+  const minWithdrawal = Number(data?.settings?.min_withdrawal ?? 1);
+  const depositPromptAmount = depositAmount > 0 ? getDepositPromptAmount(depositAmount, depositFeeRate) : 0;
   const depositSurcharge = depositPromptAmount > 0 ? depositPromptAmount - depositAmount : 0;
 
   const deposit = useMutation({
@@ -177,7 +181,7 @@ function WalletPage() {
               <Label>Amount (KES)</Label>
               <Input
                 type="number"
-                min={10}
+                min={minDeposit}
                 value={depAmt}
                 onChange={(e) => setDepAmt(e.target.value)}
               />
@@ -189,7 +193,7 @@ function WalletPage() {
                   <span>{fmt(depositAmount)}</span>
                 </div>
                 <div className="mt-1 flex justify-between">
-                  <span className="text-muted-foreground">5% service addition</span>
+                  <span className="text-muted-foreground">{Math.round(depositFeeRate * 100)}% service addition</span>
                   <span>{fmt(depositSurcharge)}</span>
                 </div>
                 <div className="mt-1 flex justify-between border-t border-border/60 pt-1 font-medium">
@@ -210,7 +214,7 @@ function WalletPage() {
                   : "Send M-Pesa STK Push"}
             </Button>
             <p className="text-[11px] text-muted-foreground">
-              The prompt includes a {Math.round(DEPOSIT_SURCHARGE_RATE * 100)}% addition, but your
+              Minimum deposit is {fmt(minDeposit)}. The prompt includes a {Math.round(depositFeeRate * 100)}% addition, but your
               wallet is credited with the amount you entered.
             </p>
           </div>
@@ -251,7 +255,7 @@ function WalletPage() {
           <div className="space-y-3">
             <div>
               <Label>Amount (KES)</Label>
-              <Input type="number" value={wdAmt} onChange={(e) => setWdAmt(e.target.value)} />
+            <Input type="number" min={minWithdrawal} value={wdAmt} onChange={(e) => setWdAmt(e.target.value)} />
             </div>
             {Number(wdAmt) > 0 && (
               <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs">
@@ -262,7 +266,7 @@ function WalletPage() {
                 <div className="mt-1 flex justify-between border-t border-border/60 pt-1 font-medium">
                   <span>You receive</span>
                   <span>
-                    {fmt(Math.round(Number(wdAmt) * (1 - WITHDRAWAL_FEE_RATE) * 100) / 100)}
+                    {fmt(Math.round(Number(wdAmt) * (1 - withdrawalFeeRate) * 100) / 100)}
                   </span>
                 </div>
               </div>
@@ -276,7 +280,7 @@ function WalletPage() {
               {withdraw.isPending ? "Requesting..." : "Request withdrawal"}
             </Button>
             <p className="text-[11px] text-muted-foreground">
-              A {Math.round(WITHDRAWAL_FEE_RATE * 100)}% withdrawal charge is deducted for gas fees,
+              Minimum withdrawal is {fmt(minWithdrawal)}. A {Math.round(withdrawalFeeRate * 100)}% withdrawal charge is deducted for fees,
               transaction fees, and tax.
             </p>
           </div>

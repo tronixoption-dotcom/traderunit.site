@@ -93,26 +93,60 @@ function getCopyTradeDailyAccrual(trade: any) {
 
 async function requireAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  const { data } = await (supabaseAdmin as any)
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .eq("role", "admin")
+    .in("role", ["admin", "super_admin"])
+    .limit(1)
     .maybeSingle();
   if (!data) throw new Error("Forbidden");
   return supabaseAdmin;
 }
 
+async function getAdminRole(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await (supabaseAdmin as any)
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "super_admin"])
+    .limit(5);
+  const roles = (data ?? []).map((row: any) => row.role);
+  return roles.includes("super_admin") ? "super_admin" : roles.includes("admin") ? "admin" : null;
+}
+
+async function requireSuperAdmin(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const role = await getAdminRole(userId);
+  if (role !== "super_admin") throw new Error("Super admin access required");
+  return supabaseAdmin;
+}
+
+export const adminGetAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => ({ role: await getAdminRole(context.userId) }));
+
 export const adminListClients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const admin = await requireAdmin(context.userId);
+    const role = await getAdminRole(context.userId);
     const { data: profiles } = await admin
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(500);
-    const ids = (profiles ?? []).map((p) => p.id);
+    const profileIds = (profiles ?? []).map((p) => p.id);
+    const { data: roles } = profileIds.length
+      ? await admin.from("user_roles").select("user_id,role").in("user_id", profileIds)
+      : { data: [] };
+    const roleMap = new Map<string, string[]>();
+    (roles ?? []).forEach((r: any) => roleMap.set(r.user_id, [...(roleMap.get(r.user_id) ?? []), r.role]));
+    const visibleProfiles = (profiles ?? []).filter((p: any) =>
+      role === "super_admin" || !(roleMap.get(p.id) ?? []).includes("super_admin"),
+    );
+    const ids = visibleProfiles.map((p: any) => p.id);
     if (!ids.length) return [];
     const [{ data: wallets }, { data: trades }] = await Promise.all([
       admin.from("wallets").select("*").in("user_id", ids),
@@ -129,10 +163,11 @@ export const adminListClients = createServerFn({ method: "GET" })
       list.push(trade);
       tradeMap.set(trade.user_id, list);
     });
-    return (profiles ?? []).map((p) => ({
+    return visibleProfiles.map((p: any) => ({
       ...p,
       wallet: walletMap.get(p.id) ?? null,
       trades: tradeMap.get(p.id) ?? [],
+      role: role === "super_admin" ? (roleMap.get(p.id) ?? []).find((r) => r !== "client") ?? "client" : "client",
     }));
   });
 
@@ -156,7 +191,7 @@ export const adminListDeposits = createServerFn({ method: "GET" })
 export const adminGetCryptoDepositSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data, error } = await (admin as any)
       .from("crypto_deposit_settings")
       .select("*")
@@ -176,7 +211,7 @@ export const adminUpdateCryptoDepositSettings = createServerFn({ method: "POST" 
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { error } = await (admin as any)
       .from("crypto_deposit_settings")
       .upsert({ id: 1, ...data, updated_at: new Date().toISOString() });
@@ -190,7 +225,7 @@ export const adminApproveDeposit = createServerFn({ method: "POST" })
     z.object({ deposit_id: z.string().uuid(), approve: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: dep } = await admin
       .from("deposits")
       .select("*")
@@ -242,7 +277,7 @@ export const adminUpdateWithdrawal = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: wd } = await admin
       .from("withdrawals")
       .select("*")
@@ -322,7 +357,7 @@ export const adminReplySupport = createServerFn({ method: "POST" })
 export const adminGetTeamTree = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: profiles } = await admin
       .from("profiles")
       .select("id, full_name, email, referral_code, referred_by")
@@ -511,7 +546,7 @@ export const adminDeleteCopyTradeAnalyst = createServerFn({ method: "POST" })
 export const adminListKycVerifications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: rows } = await admin
       .from("kyc_verifications")
       .select("*")
@@ -556,7 +591,7 @@ export const adminReviewKycVerification = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     if (data.status === "rejected" && !data.reason?.trim()) {
       throw new Error("Please write a rejection reason.");
     }
@@ -626,7 +661,7 @@ export const adminSetCopyTradeResultOverride = createServerFn({ method: "POST" }
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: trade, error: tradeError } = await admin
       .from("copy_trades")
       .select("id,status")
@@ -718,13 +753,18 @@ export const adminDeletePackage = createServerFn({ method: "POST" })
 
 export const adminPromote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { user_id: string; role: "admin" | "client"; grant: boolean }) =>
+  .inputValidator((d: { user_id: string; role: "admin" | "super_admin"; grant: boolean }) =>
     z
-      .object({ user_id: z.string().uuid(), role: z.enum(["admin", "client"]), grant: z.boolean() })
+      .object({ user_id: z.string().uuid(), role: z.enum(["admin", "super_admin"]), grant: z.boolean() })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const admin = await requireAdmin(context.userId);
+    const callerRole = await getAdminRole(context.userId);
+    if (!data.grant && data.user_id === context.userId) throw new Error("You cannot revoke your own access.");
+    if (callerRole === "admin" && (!data.grant || data.role !== "super_admin")) {
+      throw new Error("Admins may only grant elevated access.");
+    }
     if (data.grant) {
       await admin
         .from("user_roles")
@@ -739,7 +779,7 @@ export const adminResetClientPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { user_id: string }) => z.object({ user_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: prof } = await admin
       .from("profiles")
       .select("phone,email")
@@ -765,7 +805,7 @@ export const adminAdjustWallet = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const isCredit = data.amount >= 0;
     const { data: wallet, error } = await admin.rpc("adjust_wallet_atomic", {
       _user_id: data.user_id,
@@ -788,7 +828,7 @@ export const adminAdjustWallet = createServerFn({ method: "POST" })
 export const adminListRedPackets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: packets } = await admin
       .from("red_packets")
       .select("*")
@@ -805,7 +845,7 @@ export const adminListRedPackets = createServerFn({ method: "GET" })
 export const adminListSpins = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const admin = await requireAdmin(context.userId);
+    const admin = await requireSuperAdmin(context.userId);
     const { data: tickets } = await admin
       .from("spin_tickets")
       .select("*")
@@ -1175,5 +1215,59 @@ export const adminUpdateTreasurySettings = createServerFn({ method: "POST" })
       },
       { onConflict: "id" },
     );
+    return { ok: true };
+  });
+
+export const adminGetSystemSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const admin = await requireSuperAdmin(context.userId);
+    const { data, error } = await (admin as any)
+      .from("treasury_settings")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) throw error;
+    return data ?? {
+      id: 1,
+      platform_name: "Trader Unit",
+      min_deposit: 10,
+      min_withdrawal: 1,
+      deposit_fee_rate: 0.05,
+      withdrawal_fee_rate: 0.32,
+      crypto_deposits_enabled: true,
+      maintenance_mode: false,
+      withdrawals_frozen: false,
+      payouts_frozen: false,
+    };
+  });
+
+export const adminUpdateSystemSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    platform_name: string;
+    min_deposit: number;
+    min_withdrawal: number;
+    deposit_fee_rate: number;
+    withdrawal_fee_rate: number;
+    crypto_deposits_enabled: boolean;
+    maintenance_mode: boolean;
+  }) => z.object({
+    platform_name: z.string().trim().min(2).max(80),
+    min_deposit: z.number().min(0).max(1_000_000),
+    min_withdrawal: z.number().min(0).max(1_000_000),
+    deposit_fee_rate: z.number().min(0).max(1),
+    withdrawal_fee_rate: z.number().min(0).max(1),
+    crypto_deposits_enabled: z.boolean(),
+    maintenance_mode: z.boolean(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const admin = await requireSuperAdmin(context.userId);
+    const { error } = await (admin as any).from("treasury_settings").upsert({
+      id: 1,
+      ...data,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+    if (error) throw error;
     return { ok: true };
   });

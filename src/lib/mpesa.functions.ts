@@ -64,8 +64,8 @@ function tsAndPassword(shortcode: string, passkey: string) {
 
 export const DEPOSIT_SURCHARGE_RATE = 0.05;
 
-export function getDepositPromptAmount(amount: number) {
-  return Math.ceil(Number(amount) * (1 + DEPOSIT_SURCHARGE_RATE));
+export function getDepositPromptAmount(amount: number, feeRate = DEPOSIT_SURCHARGE_RATE) {
+  return Math.ceil(Number(amount) * (1 + Number(feeRate)));
 }
 
 async function resolvePublicBaseUrl(path = "/api/public/mpesa/payout/callback") {
@@ -212,7 +212,7 @@ export async function initiateWithdrawalPayout({
 export const initiateStkPush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { amount: number }) =>
-    z.object({ amount: z.number().int().min(10).max(1_000_000) }).parse(d),
+    z.object({ amount: z.number().positive().max(1_000_000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
@@ -231,7 +231,6 @@ export const initiateStkPush = createServerFn({ method: "POST" })
     const { timestamp, password } = tsAndPassword(shortcode, passkey);
     const phone = normalizePhone(prof.phone);
     const walletCreditAmount = Number(data.amount);
-    const promptAmount = getDepositPromptAmount(walletCreditAmount);
 
     // Derive callback URL from the incoming request so remixes work
     let callbackUrl = readEnvValue("MPESA_CALLBACK_URL", "DARAJA_CALLBACK_URL");
@@ -244,6 +243,18 @@ export const initiateStkPush = createServerFn({ method: "POST" })
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: platformSettings } = await (supabaseAdmin as any)
+      .from("treasury_settings")
+      .select("min_deposit,deposit_fee_rate,maintenance_mode")
+      .eq("id", 1)
+      .maybeSingle();
+    const minimumDeposit = Number(platformSettings?.min_deposit ?? 10);
+    if (walletCreditAmount < minimumDeposit) {
+      throw new Error(`Minimum deposit is KES ${minimumDeposit.toLocaleString()}.`);
+    }
+    if (platformSettings?.maintenance_mode) throw new Error("Deposits are temporarily paused for maintenance.");
+    const depositFeeRate = Number(platformSettings?.deposit_fee_rate ?? DEPOSIT_SURCHARGE_RATE);
+    const promptAmount = getDepositPromptAmount(walletCreditAmount, depositFeeRate);
     const { data: dep, error: depErr } = await supabaseAdmin
       .from("deposits")
       .insert({
@@ -254,7 +265,7 @@ export const initiateStkPush = createServerFn({ method: "POST" })
         metadata: {
           wallet_credit_amount: walletCreditAmount,
           prompted_amount: promptAmount,
-          surcharge_rate: DEPOSIT_SURCHARGE_RATE,
+          surcharge_rate: depositFeeRate,
           surcharge_amount: promptAmount - walletCreditAmount,
         },
       })

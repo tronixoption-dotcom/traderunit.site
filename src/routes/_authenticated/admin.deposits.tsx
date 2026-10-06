@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { adminListDeposits, adminApproveDeposit, adminGetCryptoDepositSettings, adminUpdateCryptoDepositSettings } from "@/lib/admin.functions";
+import { adminListDeposits, adminApproveDeposit, adminGetCryptoDepositSettings, adminUpdateCryptoDepositSettings, adminGetAccess } from "@/lib/admin.functions";
 import { AdminShell } from "@/components/layout/admin-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,9 +22,11 @@ function DepositsPage() {
   const actFn = useServerFn(adminApproveDeposit);
   const settingsFn = useServerFn(adminGetCryptoDepositSettings);
   const updateSettingsFn = useServerFn(adminUpdateCryptoDepositSettings);
+  const accessFn = useServerFn(adminGetAccess);
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["admin-deposits"], queryFn: () => listFn() });
-  const { data: cryptoSettings } = useQuery({ queryKey: ["admin-crypto-settings"], queryFn: () => settingsFn() });
+  const { data: access } = useQuery({ queryKey: ["admin-access"], queryFn: () => accessFn() });
+  const { data: cryptoSettings } = useQuery({ queryKey: ["admin-crypto-settings"], queryFn: () => settingsFn(), enabled: access?.role === "super_admin" });
   const [walletAddress, setWalletAddress] = useState("");
   const [currency, setCurrency] = useState("USDT");
   const [network, setNetwork] = useState("TRC20");
@@ -51,7 +53,7 @@ function DepositsPage() {
 
   return (
     <AdminShell title="Deposits">
-      <div className="mb-4 glass-card rounded-2xl p-4">
+      {access?.role === "super_admin" && <div className="mb-4 glass-card rounded-2xl p-4">
         <div className="mb-3"><div className="text-sm font-semibold">Crypto deposit wallet</div><div className="text-xs text-muted-foreground">Clients send crypto here and wait for your approval.</div></div>
         <div className="grid gap-3 md:grid-cols-[1fr_140px_140px_auto] md:items-end">
           <div><Label>Wallet address</Label><Input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="Enter receiving wallet address" /></div>
@@ -59,7 +61,7 @@ function DepositsPage() {
           <div><Label>Network</Label><Input value={network} onChange={(e) => setNetwork(e.target.value)} /></div>
           <Button onClick={() => saveSettings.mutate()} disabled={saveSettings.isPending}>{saveSettings.isPending ? "Saving..." : "Save wallet"}</Button>
         </div>
-      </div>
+      </div>}
       <div className="glass-card overflow-hidden rounded-2xl">
         <div className="grid grid-cols-[1fr_120px_140px_140px_180px] gap-2 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
           <div>User</div>
@@ -88,7 +90,7 @@ function DepositsPage() {
               {d.crypto_tx_hash && <div className="mt-1 max-w-[140px] truncate text-[10px] text-muted-foreground" title={d.crypto_tx_hash}>tx: {d.crypto_tx_hash}</div>}
             </div>
             <div>
-              {d.status === "pending" && (
+              {access?.role === "super_admin" && d.status === "pending" && (
                 <div className="flex gap-1">
                   <button
                     onClick={() => act.mutate({ deposit_id: d.id, approve: true })}

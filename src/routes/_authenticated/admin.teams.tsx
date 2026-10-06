@@ -5,10 +5,10 @@ import { adminGetTeamTree } from "@/lib/admin.functions";
 import { AdminShell } from "@/components/layout/admin-shell";
 import Tree from "react-d3-tree";
 import { useMemo } from "react";
-import { requireAdminRoute } from "@/lib/admin-route";
+import { requireSuperAdminRoute } from "@/lib/admin-route";
 
 export const Route = createFileRoute("/_authenticated/admin/teams")({
-  beforeLoad: requireAdminRoute,
+  beforeLoad: requireSuperAdminRoute,
   component: TeamsPage,
 });
 

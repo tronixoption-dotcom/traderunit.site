@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { adminListClients, adminPromote, adminAdjustWallet, adminResetClientPassword } from "@/lib/admin.functions";
+import { adminListClients, adminPromote, adminAdjustWallet, adminResetClientPassword, adminGetAccess } from "@/lib/admin.functions";
 import { AdminShell } from "@/components/layout/admin-shell";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -20,16 +20,18 @@ function AdminClients() {
   const listFn = useServerFn(adminListClients);
   const promoteFn = useServerFn(adminPromote);
   const resetPasswordFn = useServerFn(adminResetClientPassword);
+  const accessFn = useServerFn(adminGetAccess);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["admin-clients"], queryFn: () => listFn() });
+  const { data: access } = useQuery({ queryKey: ["admin-access"], queryFn: () => accessFn() });
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   const adjustFn = useServerFn(adminAdjustWallet);
   const [adjInput, setAdjInput] = useState<Record<string, string>>({});
 
   const toggleAdmin = useMutation({
-    mutationFn: async (args: { user_id: string; grant: boolean }) =>
-      promoteFn({ data: { user_id: args.user_id, role: "admin", grant: args.grant } }),
+    mutationFn: async (args: { user_id: string; role: "admin" | "super_admin"; grant: boolean }) =>
+      promoteFn({ data: args }),
     onSuccess: () => {
       toast.success("Updated");
       qc.invalidateQueries({ queryKey: ["admin-clients"] });
@@ -92,35 +94,59 @@ function AdminClients() {
                   <div className="grid gap-4 md:grid-cols-3">
                     <Info label="Phone" value={c.phone ?? "—"} />
                     <Info label="Referral code" value={c.referral_code} />
+                    {access?.role === "super_admin" && <Info label="Access role" value={c.role ?? "client"} />}
                     <Info label="Total deposited" value={fmt(c.wallet?.total_deposited)} />
                     <Info label="Total earned" value={fmt(c.wallet?.total_earned)} />
                     <Info label="Total withdrawn" value={fmt(c.wallet?.total_withdrawn)} />
                     <div>
-                      <button
-                        onClick={() => toggleAdmin.mutate({ user_id: c.id, grant: true })}
-                        className="mr-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-3 py-1.5 text-xs text-primary"
-                      >
-                        <ShieldCheck className="h-3 w-3" /> Make admin
-                      </button>
-                      <button
-                        onClick={() => toggleAdmin.mutate({ user_id: c.id, grant: false })}
-                        className="inline-flex items-center gap-1 rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground"
-                      >
-                        <ShieldOff className="h-3 w-3" /> Revoke
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Reset ${c.full_name || c.email}'s password to their phone number?`)) {
-                            resetPassword.mutate(c.id);
-                          }
-                        }}
-                        className="mt-2 inline-flex items-center gap-1 rounded-md bg-warning/20 px-3 py-1.5 text-xs text-foreground md:mt-0 md:ml-2"
-                      >
-                        <KeyRound className="h-3 w-3" /> Reset password
-                      </button>
+                      {access?.role === "super_admin" ? (
+                        <>
+                          <button
+                            onClick={() => toggleAdmin.mutate({ user_id: c.id, role: "admin", grant: true })}
+                            className="mr-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-3 py-1.5 text-xs text-primary"
+                          >
+                            <ShieldCheck className="h-3 w-3" /> Make admin
+                          </button>
+                          <button
+                            onClick={() => toggleAdmin.mutate({ user_id: c.id, role: "super_admin", grant: true })}
+                            className="mr-2 inline-flex items-center gap-1 rounded-md bg-destructive/15 px-3 py-1.5 text-xs text-destructive"
+                          >
+                            Make super admin
+                          </button>
+                          <button
+                            onClick={() => toggleAdmin.mutate({ user_id: c.id, role: "admin", grant: false })}
+                            className="inline-flex items-center gap-1 rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground"
+                          >
+                            <ShieldOff className="h-3 w-3" /> Revoke admin
+                          </button>
+                          {c.role === "super_admin" && <button
+                            onClick={() => toggleAdmin.mutate({ user_id: c.id, role: "super_admin", grant: false })}
+                            className="ml-2 inline-flex items-center gap-1 rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground"
+                          >
+                            <ShieldOff className="h-3 w-3" /> Revoke super admin
+                          </button>}
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => toggleAdmin.mutate({ user_id: c.id, role: "super_admin", grant: true })}
+                          className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-3 py-1.5 text-xs text-primary"
+                        >
+                          <ShieldCheck className="h-3 w-3" /> Elevate access
+                        </button>
+                      )}
+                      {access?.role === "super_admin" && <button
+                          onClick={() => {
+                            if (confirm(`Reset ${c.full_name || c.email}'s password to their phone number?`)) {
+                              resetPassword.mutate(c.id);
+                            }
+                          }}
+                          className="mt-2 inline-flex items-center gap-1 rounded-md bg-warning/20 px-3 py-1.5 text-xs text-foreground md:mt-0 md:ml-2"
+                        >
+                          <KeyRound className="h-3 w-3" /> Reset password
+                        </button>}
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-2 rounded-lg border border-border/60 bg-card p-2">
+                  {access?.role === "super_admin" && <div className="mt-3 flex items-center gap-2 rounded-lg border border-border/60 bg-card p-2">
                     <span className="text-[11px] text-muted-foreground">
                       Adjust balance (KES, negative to debit):
                     </span>
@@ -142,7 +168,7 @@ function AdminClients() {
                     >
                       Apply
                     </button>
-                  </div>
+                  </div>}
                   <h4 className="mt-4 mb-2 text-xs font-semibold uppercase text-muted-foreground">
                     Copy trading history
                   </h4>

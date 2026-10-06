@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { adminListRedPackets } from "@/lib/admin.functions";
 import { AdminShell } from "@/components/layout/admin-shell";
-import { requireAdminRoute } from "@/lib/admin-route";
+import { requireSuperAdminRoute } from "@/lib/admin-route";
 
 export const Route = createFileRoute("/_authenticated/admin/redpackets")({
-  beforeLoad: requireAdminRoute,
+  beforeLoad: requireSuperAdminRoute,
   component: RedPacketsAdmin,
 });
 

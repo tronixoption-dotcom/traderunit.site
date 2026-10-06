@@ -16,6 +16,9 @@ import {
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { adminGetAccess } from "@/lib/admin.functions";
 
 const items = [
   { to: "/admin/clients", label: "Clients", icon: Users },
@@ -23,17 +26,21 @@ const items = [
   { to: "/admin/treasury", label: "Treasury", icon: Gauge },
   { to: "/admin/deposits", label: "Deposits", icon: ArrowDownToLine },
   { to: "/admin/withdrawals", label: "Withdrawals", icon: ArrowUpFromLine },
-  { to: "/admin/kyc", label: "KYC Approval", icon: IdCard },
-  { to: "/admin/redpackets", label: "Red Packets", icon: Gift },
-  { to: "/admin/teams", label: "Teams", icon: Network },
+  { to: "/admin/kyc", label: "KYC Approval", icon: IdCard, superOnly: true },
+  { to: "/admin/redpackets", label: "Red Packets", icon: Gift, superOnly: true },
+  { to: "/admin/teams", label: "Teams", icon: Network, superOnly: true },
   { to: "/admin/support", label: "Support", icon: MessageSquare },
   { to: "/admin/packages", label: "Copy Trading", icon: SlidersHorizontal },
+  { to: "/admin/settings", label: "System Settings", icon: SlidersHorizontal, superOnly: true },
 ] as const;
 
 export function AdminShell({ children, title }: { children: ReactNode; title: string }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const accessFn = useServerFn(adminGetAccess);
+  const { data: access } = useQuery({ queryKey: ["admin-access"], queryFn: () => accessFn() });
+  const visibleItems = items.filter((i) => !(i as any).superOnly || access?.role === "super_admin");
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
@@ -51,7 +58,7 @@ export function AdminShell({ children, title }: { children: ReactNode; title: st
           <span className="text-base font-bold">Trader Unit - Admin</span>
         </Link>
         <nav className="flex-1 space-y-1">
-          {items.map((i) => {
+          {visibleItems.map((i) => {
             const active = path === i.to || path.startsWith(i.to);
             return (
               <Link
@@ -80,7 +87,7 @@ export function AdminShell({ children, title }: { children: ReactNode; title: st
             </Link>
           </div>
           <div className="flex gap-1 overflow-x-auto border-t border-border/40 px-4 py-2 md:hidden">
-            {items.map((i) => (
+            {visibleItems.map((i) => (
               <Link
                 key={i.to}
                 to={i.to}

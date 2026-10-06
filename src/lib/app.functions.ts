@@ -720,7 +720,7 @@ export const getWalletData = createServerFn({ method: "GET" })
     } catch (e) {
       console.error("reconcilePendingWalletActivity err", e);
     }
-    const [wallet, deposits, withdrawals, txns] = await Promise.all([
+    const [wallet, deposits, withdrawals, txns, platformSettings] = await Promise.all([
       supabase.from("wallets").select("*").eq("user_id", userId).maybeSingle(),
       supabase
         .from("deposits")
@@ -740,6 +740,11 @@ export const getWalletData = createServerFn({ method: "GET" })
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(30),
+      (supabaseAdmin as any)
+        .from("treasury_settings")
+        .select("min_deposit,min_withdrawal,deposit_fee_rate,withdrawal_fee_rate,crypto_deposits_enabled,maintenance_mode")
+        .eq("id", 1)
+        .maybeSingle(),
     ]);
     const activity = buildWalletActivityItems(
       deposits.data ?? [],
@@ -752,6 +757,13 @@ export const getWalletData = createServerFn({ method: "GET" })
       withdrawals: withdrawals.data ?? [],
       transactions: txns.data ?? [],
       canWithdraw: true,
+      settings: platformSettings.data ?? {
+        min_deposit: 10,
+        min_withdrawal: 1,
+        deposit_fee_rate: 0.05,
+        withdrawal_fee_rate: WITHDRAWAL_FEE_RATE,
+        crypto_deposits_enabled: true,
+      },
       activity,
     };
   });
@@ -787,6 +799,16 @@ export const submitCryptoDeposit = createServerFn({ method: "POST" })
       .maybeSingle();
     if (settingsError) throw settingsError;
     if (!settings?.wallet_address) throw new Error("Crypto deposits are not configured yet.");
+    const { data: platformSettings } = await (supabaseAdmin as any)
+      .from("treasury_settings")
+      .select("min_deposit,crypto_deposits_enabled,maintenance_mode")
+      .eq("id", 1)
+      .maybeSingle();
+    if (platformSettings?.crypto_deposits_enabled === false) throw new Error("Crypto deposits are currently disabled.");
+    if (platformSettings?.maintenance_mode) throw new Error("Deposits are temporarily paused for maintenance.");
+    if (Number(data.amount) < Number(platformSettings?.min_deposit ?? 10)) {
+      throw new Error(`Minimum deposit is KES ${Number(platformSettings?.min_deposit ?? 10).toLocaleString()}.`);
+    }
     const { data: deposit, error } = await (supabaseAdmin as any)
       .from("deposits")
       .insert({
@@ -839,12 +861,20 @@ async function expireStalePendingWithdrawals(supabaseAdmin: any) {
 export const requestWithdrawal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { amount: number }) =>
-    z.object({ amount: z.number().min(1).max(1_000_000) }).parse(d),
+    z.object({ amount: z.number().positive().max(1_000_000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await expireStalePendingWithdrawals(supabaseAdmin);
+    const { data: platformSettings } = await (supabaseAdmin as any)
+      .from("treasury_settings")
+      .select("min_withdrawal,withdrawal_fee_rate,maintenance_mode")
+      .eq("id", 1)
+      .maybeSingle();
+    const minimumWithdrawal = Number(platformSettings?.min_withdrawal ?? 1);
+    if (data.amount < minimumWithdrawal) throw new Error(`Minimum withdrawal is KES ${minimumWithdrawal.toLocaleString()}.`);
+    if (platformSettings?.maintenance_mode) throw new Error("Withdrawals are temporarily paused for maintenance.");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select("phone")
@@ -867,7 +897,8 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
         "Withdrawals are temporarily paused by treasury controls. Please try again later.",
       );
     }
-    const fee = Math.round(Number(data.amount) * WITHDRAWAL_FEE_RATE * 100) / 100;
+    const withdrawalFeeRate = Number(platformSettings?.withdrawal_fee_rate ?? WITHDRAWAL_FEE_RATE);
+    const fee = Math.round(Number(data.amount) * withdrawalFeeRate * 100) / 100;
     const net = Math.round((Number(data.amount) - fee) * 100) / 100;
 
     const { data: wd, error } = await supabaseAdmin
@@ -876,7 +907,7 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
         user_id: userId,
         amount: data.amount,
         fee,
-        fee_rate: WITHDRAWAL_FEE_RATE,
+        fee_rate: withdrawalFeeRate,
         net_amount: net,
         mpesa_phone: prof.phone,
         status: "pending",
