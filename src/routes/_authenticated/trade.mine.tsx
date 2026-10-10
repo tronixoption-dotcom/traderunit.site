@@ -108,6 +108,7 @@ function CopyTradingPage() {
   const selectedMinAmount = Number(selectedAnalyst?.min_copy_amount ?? 1);
   const selectedMaxAmount = Number(selectedAnalyst?.max_copy_amount ?? 0);
   const expectedProfit = Number(amount || 0) * Number(data?.profitRate ?? 0.15);
+  const kycRequired = data?.kycRequired !== false;
   const kycApproved = !!data?.kycApproved;
   const amountBelowMinimum = Number(amount || 0) > 0 && Number(amount) < selectedMinAmount;
   const amountAboveMaximum =
@@ -181,7 +182,11 @@ function CopyTradingPage() {
         <section className="glass-card rounded-2xl p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-sm font-semibold">Open copy trade</h3>
-            {kycApproved ? (
+            {!kycRequired ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-1 text-xs font-semibold text-success">
+                <CheckCircle2 className="h-3 w-3" /> KYC not required
+              </span>
+            ) : kycApproved ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-1 text-xs font-semibold text-success">
                 <CheckCircle2 className="h-3 w-3" /> KYC approved
               </span>
@@ -191,7 +196,7 @@ function CopyTradingPage() {
               </span>
             )}
           </div>
-          {!kycApproved && (
+          {kycRequired && !kycApproved && (
             <div className="mb-4 rounded-xl border border-warning/50 bg-warning/15 p-3 text-xs leading-5">
               Your KYC must be approved before you can apply to copy trading. Go to Settings to
               submit ID front, ID back, and selfie holding ID.
@@ -280,7 +285,7 @@ function CopyTradingPage() {
               onClick={() => apply.mutate()}
               disabled={
                 apply.isPending ||
-                !kycApproved ||
+                (kycRequired && !kycApproved) ||
                 (isSignalTrade && !code.trim()) ||
                 Number(amount) <= 0 ||
                 amountBelowMinimum ||

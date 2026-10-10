@@ -330,7 +330,7 @@ export const getCopyTradingData = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await settleCopyTrades(supabaseAdmin, userId);
-    const [wallet, trades, kyc, analysts] = await Promise.all([
+    const [wallet, trades, kyc, analysts, platformSettings] = await Promise.all([
       supabase.from("wallets").select("*").eq("user_id", userId).maybeSingle(),
       supabase
         .from("copy_trades")
@@ -351,13 +351,20 @@ export const getCopyTradingData = createServerFn({ method: "GET" })
         .eq("active", true)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true }),
+      (supabaseAdmin as any)
+        .from("treasury_settings")
+        .select("trade_profit_rate,kyc_enabled")
+        .eq("id", 1)
+        .maybeSingle(),
     ]);
+    const kycRequired = platformSettings.data?.kyc_enabled !== false;
     return {
       wallet: wallet.data,
       trades: trades.data ?? [],
-      profitRate: COPY_TRADE_PROFIT_RATE,
+      profitRate: Number(platformSettings.data?.trade_profit_rate ?? COPY_TRADE_PROFIT_RATE),
       kyc: kyc.data ?? null,
-      kycApproved: kyc.data?.status === "approved",
+      kycRequired,
+      kycApproved: !kycRequired || kyc.data?.status === "approved",
       analysts: analysts.data ?? [],
     };
   });
@@ -574,6 +581,12 @@ export const applyCopyTrade = createServerFn({ method: "POST" })
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await settleCopyTrades(supabaseAdmin, userId);
+    const { data: platformSettings } = await (supabaseAdmin as any)
+      .from("treasury_settings")
+      .select("trade_profit_rate,kyc_enabled")
+      .eq("id", 1)
+      .maybeSingle();
+    const kycRequired = platformSettings?.kyc_enabled !== false;
     const { data: kyc } = await supabaseAdmin
       .from("kyc_verifications")
       .select("status")
@@ -581,9 +594,10 @@ export const applyCopyTrade = createServerFn({ method: "POST" })
       .order("submitted_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (kyc?.status !== "approved") {
+    if (kycRequired && kyc?.status !== "approved") {
       throw new Error("KYC verification must be approved before you can trade.");
     }
+    const profitRate = Number(platformSettings?.trade_profit_rate ?? COPY_TRADE_PROFIT_RATE);
     const source = data.source ?? "signal";
     const code = (data.code ?? "").trim().toUpperCase();
     if (source === "signal" && code.length < 3) {
@@ -653,7 +667,7 @@ export const applyCopyTrade = createServerFn({ method: "POST" })
       _code_entered: code,
       _trade_type: data.trade_type,
       _amount: data.amount,
-      _profit_rate: COPY_TRADE_PROFIT_RATE,
+      _profit_rate: profitRate,
       _closes_at: closesAt,
       _description: openDescription,
     });
@@ -677,7 +691,7 @@ export const applyCopyTrade = createServerFn({ method: "POST" })
       ok: true,
       status: "open",
       closes_at: closesAt,
-      expected_profit: money(Number(data.amount) * COPY_TRADE_PROFIT_RATE),
+        expected_profit: money(Number(data.amount) * profitRate),
       will_win: true,
     };
   });
@@ -720,7 +734,7 @@ export const getWalletData = createServerFn({ method: "GET" })
     } catch (e) {
       console.error("reconcilePendingWalletActivity err", e);
     }
-    const [wallet, deposits, withdrawals, txns, platformSettings] = await Promise.all([
+    const [wallet, deposits, withdrawals, txns, platformSettings, kyc] = await Promise.all([
       supabase.from("wallets").select("*").eq("user_id", userId).maybeSingle(),
       supabase
         .from("deposits")
@@ -742,10 +756,18 @@ export const getWalletData = createServerFn({ method: "GET" })
         .limit(30),
       (supabaseAdmin as any)
         .from("treasury_settings")
-        .select("min_deposit,min_withdrawal,deposit_fee_rate,withdrawal_fee_rate,crypto_deposits_enabled,maintenance_mode")
+        .select("min_deposit,min_withdrawal,deposit_fee_rate,withdrawal_fee_rate,crypto_deposits_enabled,maintenance_mode,kyc_enabled")
         .eq("id", 1)
         .maybeSingle(),
+      supabase
+        .from("kyc_verifications")
+        .select("status")
+        .eq("user_id", userId)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
+    const kycRequired = platformSettings.data?.kyc_enabled !== false;
     const activity = buildWalletActivityItems(
       deposits.data ?? [],
       withdrawals.data ?? [],
@@ -756,13 +778,16 @@ export const getWalletData = createServerFn({ method: "GET" })
       deposits: deposits.data ?? [],
       withdrawals: withdrawals.data ?? [],
       transactions: txns.data ?? [],
-      canWithdraw: true,
+      canWithdraw: !kycRequired || kyc.data?.status === "approved",
+      kycRequired,
+      kycApproved: !kycRequired || kyc.data?.status === "approved",
       settings: platformSettings.data ?? {
         min_deposit: 10,
         min_withdrawal: 1,
         deposit_fee_rate: 0.05,
         withdrawal_fee_rate: WITHDRAWAL_FEE_RATE,
         crypto_deposits_enabled: true,
+        kyc_enabled: true,
       },
       activity,
     };
@@ -801,11 +826,21 @@ export const submitCryptoDeposit = createServerFn({ method: "POST" })
     if (!settings?.wallet_address) throw new Error("Crypto deposits are not configured yet.");
     const { data: platformSettings } = await (supabaseAdmin as any)
       .from("treasury_settings")
-      .select("min_deposit,crypto_deposits_enabled,maintenance_mode")
+      .select("min_deposit,crypto_deposits_enabled,maintenance_mode,kyc_enabled")
       .eq("id", 1)
       .maybeSingle();
     if (platformSettings?.crypto_deposits_enabled === false) throw new Error("Crypto deposits are currently disabled.");
     if (platformSettings?.maintenance_mode) throw new Error("Deposits are temporarily paused for maintenance.");
+    if (platformSettings?.kyc_enabled !== false) {
+      const { data: kyc } = await supabaseAdmin
+        .from("kyc_verifications")
+        .select("status")
+        .eq("user_id", context.userId)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (kyc?.status !== "approved") throw new Error("KYC verification must be approved before depositing.");
+    }
     if (Number(data.amount) < Number(platformSettings?.min_deposit ?? 10)) {
       throw new Error(`Minimum deposit is KES ${Number(platformSettings?.min_deposit ?? 10).toLocaleString()}.`);
     }
@@ -869,12 +904,22 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
     await expireStalePendingWithdrawals(supabaseAdmin);
     const { data: platformSettings } = await (supabaseAdmin as any)
       .from("treasury_settings")
-      .select("min_withdrawal,withdrawal_fee_rate,maintenance_mode")
+      .select("min_withdrawal,withdrawal_fee_rate,maintenance_mode,kyc_enabled")
       .eq("id", 1)
       .maybeSingle();
     const minimumWithdrawal = Number(platformSettings?.min_withdrawal ?? 1);
     if (data.amount < minimumWithdrawal) throw new Error(`Minimum withdrawal is KES ${minimumWithdrawal.toLocaleString()}.`);
     if (platformSettings?.maintenance_mode) throw new Error("Withdrawals are temporarily paused for maintenance.");
+    if (platformSettings?.kyc_enabled !== false) {
+      const { data: kyc } = await supabaseAdmin
+        .from("kyc_verifications")
+        .select("status")
+        .eq("user_id", userId)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (kyc?.status !== "approved") throw new Error("KYC verification must be approved before withdrawing.");
+    }
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select("phone")

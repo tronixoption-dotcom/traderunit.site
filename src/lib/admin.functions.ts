@@ -1236,6 +1236,8 @@ export const adminGetSystemSettings = createServerFn({ method: "GET" })
       deposit_fee_rate: 0.05,
       withdrawal_fee_rate: 0.32,
       crypto_deposits_enabled: true,
+      trade_profit_rate: 0.15,
+      kyc_enabled: true,
       maintenance_mode: false,
       withdrawals_frozen: false,
       payouts_frozen: false,
@@ -1251,6 +1253,8 @@ export const adminUpdateSystemSettings = createServerFn({ method: "POST" })
     deposit_fee_rate: number;
     withdrawal_fee_rate: number;
     crypto_deposits_enabled: boolean;
+    trade_profit_rate: number;
+    kyc_enabled: boolean;
     maintenance_mode: boolean;
   }) => z.object({
     platform_name: z.string().trim().min(2).max(80),
@@ -1259,6 +1263,8 @@ export const adminUpdateSystemSettings = createServerFn({ method: "POST" })
     deposit_fee_rate: z.number().min(0).max(1),
     withdrawal_fee_rate: z.number().min(0).max(1),
     crypto_deposits_enabled: z.boolean(),
+    trade_profit_rate: z.number().min(0).max(1),
+    kyc_enabled: z.boolean(),
     maintenance_mode: z.boolean(),
   }).parse(d))
   .handler(async ({ data, context }) => {

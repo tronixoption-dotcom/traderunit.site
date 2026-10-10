@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Copy } from "lucide-react";
 import {
   getWalletData,
   requestWithdrawal,
@@ -111,6 +112,17 @@ function WalletPage() {
     },
     onError: (e: any) => toast.error(e.message ?? "Could not submit crypto deposit"),
   });
+
+  const copyCryptoWallet = async () => {
+    const address = cryptoSettings?.wallet_address;
+    if (!address) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      toast.success("Crypto wallet address copied");
+    } catch {
+      toast.error("Could not copy the wallet address");
+    }
+  };
 
   const activityItems = useMemo(() => {
     const merged = [...(data?.activity ?? []), ...pendingActivity];
@@ -224,8 +236,15 @@ function WalletPage() {
           <div className="space-y-3">
             <div className="rounded-xl border border-primary/25 bg-primary/10 p-3 text-xs">
               <div className="font-semibold">Send {cryptoSettings?.currency ?? "USDT"} ({cryptoSettings?.network ?? "TRC20"})</div>
-              <div className="mt-2 break-all font-mono text-[11px] text-foreground">
-                {cryptoSettings?.wallet_address || "Admin wallet address not configured"}
+              <div className="mt-2 flex items-start gap-2">
+                <div className="min-w-0 flex-1 break-all font-mono text-[11px] text-foreground">
+                  {cryptoSettings?.wallet_address || "Admin wallet address not configured"}
+                </div>
+                {cryptoSettings?.wallet_address && (
+                  <Button type="button" size="sm" variant="outline" onClick={copyCryptoWallet} className="shrink-0">
+                    <Copy className="mr-1 h-3 w-3" /> Copy
+                  </Button>
+                )}
               </div>
             </div>
             <div>

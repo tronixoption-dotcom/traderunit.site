@@ -245,7 +245,7 @@ export const initiateStkPush = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: platformSettings } = await (supabaseAdmin as any)
       .from("treasury_settings")
-      .select("min_deposit,deposit_fee_rate,maintenance_mode")
+      .select("min_deposit,deposit_fee_rate,maintenance_mode,kyc_enabled")
       .eq("id", 1)
       .maybeSingle();
     const minimumDeposit = Number(platformSettings?.min_deposit ?? 10);
@@ -253,6 +253,16 @@ export const initiateStkPush = createServerFn({ method: "POST" })
       throw new Error(`Minimum deposit is KES ${minimumDeposit.toLocaleString()}.`);
     }
     if (platformSettings?.maintenance_mode) throw new Error("Deposits are temporarily paused for maintenance.");
+    if (platformSettings?.kyc_enabled !== false) {
+      const { data: kyc } = await supabaseAdmin
+        .from("kyc_verifications")
+        .select("status")
+        .eq("user_id", userId)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (kyc?.status !== "approved") throw new Error("KYC verification must be approved before depositing.");
+    }
     const depositFeeRate = Number(platformSettings?.deposit_fee_rate ?? DEPOSIT_SURCHARGE_RATE);
     const promptAmount = getDepositPromptAmount(walletCreditAmount, depositFeeRate);
     const { data: dep, error: depErr } = await supabaseAdmin

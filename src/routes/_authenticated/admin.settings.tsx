@@ -21,6 +21,8 @@ const defaults = {
   min_withdrawal: 1,
   deposit_fee_rate: 0.05,
   withdrawal_fee_rate: 0.32,
+  trade_profit_rate: 15,
+  kyc_enabled: true,
   crypto_deposits_enabled: true,
   maintenance_mode: false,
 };
@@ -33,7 +35,7 @@ function SystemSettingsPage() {
   const [form, setForm] = useState<any>(defaults);
 
   useEffect(() => {
-    if (data) setForm({ ...defaults, ...data });
+    if (data) setForm({ ...defaults, ...data, trade_profit_rate: Number(data.trade_profit_rate ?? 0.15) * 100 });
   }, [data]);
 
   const save = useMutation({
@@ -44,6 +46,7 @@ function SystemSettingsPage() {
         min_withdrawal: Number(form.min_withdrawal),
         deposit_fee_rate: Number(form.deposit_fee_rate),
         withdrawal_fee_rate: Number(form.withdrawal_fee_rate),
+        trade_profit_rate: Number(form.trade_profit_rate) / 100,
       },
     }),
     onSuccess: () => {
@@ -67,9 +70,11 @@ function SystemSettingsPage() {
             <Field label="Minimum withdrawal (KES)" type="number" value={form.min_withdrawal} onChange={(v) => set("min_withdrawal", v)} />
             <Field label="Deposit fee / service rate" type="number" step="0.001" value={form.deposit_fee_rate} onChange={(v) => set("deposit_fee_rate", v)} />
             <Field label="Withdrawal fee rate" type="number" step="0.001" value={form.withdrawal_fee_rate} onChange={(v) => set("withdrawal_fee_rate", v)} />
+            <Field label="Profit earned per successful trade (%)" type="number" step="0.1" value={form.trade_profit_rate} onChange={(v) => set("trade_profit_rate", v)} />
           </div>
           <div className="mt-5 space-y-3 border-t border-border/60 pt-4">
             <Toggle label="Allow crypto deposits" checked={!!form.crypto_deposits_enabled} onChange={(v) => set("crypto_deposits_enabled", v)} />
+            <Toggle label="Require KYC verification for trading, deposits, and withdrawals" checked={!!form.kyc_enabled} onChange={(v) => set("kyc_enabled", v)} />
             <Toggle label="Maintenance mode" checked={!!form.maintenance_mode} onChange={(v) => set("maintenance_mode", v)} />
           </div>
           <Button className="mt-5 gradient-gold" onClick={() => save.mutate()} disabled={save.isPending}>
